@@ -1,0 +1,26 @@
+project:
+  type: website
+  output-dir: _site
+
+website:
+  title: "mlwp-tools"
+  site-url: https://mlwp-tools.github.io
+  repo-url: https://github.com/mlwp-tools/mlwp-tools.github.io
+  repo-actions: [edit, issue]
+  navbar:
+    left:
+      - href: index.md
+        text: Home
+      - href: roadmap.md
+        text: Roadmap
+    right:
+      - icon: github
+        href: https://github.com/mlwp-tools
+        aria-label: mlwp-tools on GitHub
+
+format:
+  html:
+    theme:
+      light: cosmo
+      dark: darkly
+    toc: true
