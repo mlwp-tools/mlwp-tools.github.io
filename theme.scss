@@ -278,14 +278,15 @@ h1, h2, h3, h4 {
   overflow: hidden;
   border: 1px solid var(--mt-border);
   box-shadow: var(--mt-shadow);
-  background: var(--mt-surface);
+  background: var(--mt-code-bg);
 
   .terminal-bar {
     display: flex;
     align-items: center;
     gap: 0.4rem;
     padding: 0.65rem 1rem;
-    background: var(--mt-code-bg);
+    background: #132c47;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     color: var(--mt-code-text);
     font-family: $font-family-monospace;
     font-size: 0.75rem;
@@ -314,7 +315,7 @@ h1, h2, h3, h4 {
 
   pre.sourceCode,
   div.sourceCode {
-    background: var(--mt-surface) !important;
+    background: var(--mt-code-bg) !important;
   }
 
   pre {
@@ -322,6 +323,63 @@ h1, h2, h3, h4 {
     margin: 0;
     font-size: 0.8rem;
     line-height: 1.6;
+    color: var(--mt-code-text);
+  }
+
+  // Own token palette on the dark background (the github highlight theme
+  // is made for light backgrounds and colours most tokens navy).
+  // Must beat Quarto's `pre > code.sourceCode > span` default text colour.
+  code,
+  code span,
+  pre > code.sourceCode > span {
+    color: var(--mt-code-text);
+  }
+
+  code span.kw,
+  code span.im,
+  code span.cf,
+  code span.dt,
+  code span.at {
+    color: #7cc4ff;
+  }
+
+  code span.st,
+  code span.ss,
+  code span.vs,
+  code span.ch {
+    color: #f2c27a;
+  }
+
+  code span.co,
+  code span.do,
+  code span.an,
+  code span.cv {
+    color: #7d93ab;
+    font-style: italic;
+  }
+
+  code span.fu,
+  code span.bu,
+  code span.va {
+    color: #8be0c9;
+  }
+
+  code span.dv,
+  code span.fl,
+  code span.bn,
+  code span.cn {
+    color: #c9a7ff;
+  }
+
+  code span.op,
+  code span.ot,
+  code span.sc {
+    color: #a9bdd3;
+  }
+
+  // Copy button on the dark background.
+  .code-copy-button {
+    color: var(--mt-code-text);
   }
 }
 
