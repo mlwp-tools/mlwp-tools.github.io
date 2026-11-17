@@ -53,13 +53,16 @@ ds_fc = dl.load_and_validate_dataset(
     loader="mlwp_data_loaders.loaders.anemoi.anemoi_inference",
 )
 
-# align: grid -> stations, then common valid times
+# space: forecast grid -> station points (obs unchanged)
 ds_fc_aligned = mx.align_space(ds_fc, reference=ds_obs)
+
+# time: cut both to their shared valid times, and lay the
+#   obs out like the forecast: (reference_time, lead_time)
 ds_obs_aligned, ds_fc_aligned = mx.align_time(
     [ds_obs, ds_fc_aligned]
 )
 
-# score: any metrics package works, or your own function
+# score: RMSE per lead time, with scores or your own function
 da_rmse = scores.continuous.rmse(
     ds_fc_aligned["2t"],
     ds_obs_aligned["2t"],

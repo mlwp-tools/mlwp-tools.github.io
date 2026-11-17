@@ -131,17 +131,21 @@ You never tell mxalign *how* to align. Because each dataset declares what it is,
 ```python
 import mxalign as mx
 
-# grid -> stations; points outside the forecast domain become NaN
+# space: interpolate the forecast grid to the station locations.
+# Only the forecast changes; ds_obs is just the reference.
+# Stations outside the forecast domain become NaN.
 ds_fc_aligned = mx.align_space(ds_fc, reference=ds_obs)
 
-# or with Delaunay triangulation and cached barycentric weights
+# the same, with Delaunay triangulation and cached barycentric weights
 ds_fc_aligned = mx.align_space(ds_fc, reference=ds_obs, method="delaunay")
 
-# put both on the same valid times, in forecast layout
+# time: both datasets change. Each is cut to the valid times they share,
+# and the observations are laid out like the forecast, along
+# (reference_time, lead_time), so the two line up element by element.
 ds_obs_aligned, ds_fc_aligned = mx.align_time([ds_obs, ds_fc_aligned])
 ```
 
-`align_time` changes both datasets: the forecast keeps only the valid times that both datasets have, and the observations are laid out like the forecast, along `(reference_time, lead_time)`. The results come back in the order you passed them in (or as a dict if you pass a dict).
+`align_time` returns the datasets in the order you passed them in (or a dict, if you pass a dict).
 
 Time alignment handles each combination of traits:
 
