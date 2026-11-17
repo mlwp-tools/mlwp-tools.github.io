@@ -1,0 +1,392 @@
+---
+pagetitle: "mlwp-tools · comparable weather datasets for MLWP verification"
+description: "mlwp-tools is a small set of Python packages that turn forecasts, observations and reanalyses into comparable xarray datasets: a shared contract, your own loader, and trait-driven alignment."
+page-layout: custom
+toc: false
+---
+
+::::: {.hero}
+:::: {.band-inner}
+::: {.split .split-center .split-hero}
+
+:::: {}
+::: {.hero-logo}
+![](img/logo.png){fig-alt="mlwp-tools logo: a toolbox with a network of nodes"}
+:::
+
+::: {.hero-text}
+::: eyebrow
+Machine-learning weather prediction
+:::
+
+# Comparable [weather data]{.accent}, from any [source]{.accent}
+
+::: lead-text
+mlwp-tools is a small set of Python packages that turn forecasts, observations and reanalyses into `xarray` datasets you can safely compare: a shared contract, your own loader, and alignment that works out *how* to align from *what* each dataset is.
+:::
+:::
+
+::: hero-actions
+[Get started <i class="bi bi-arrow-right"></i>](get-started.qmd){.btn-cta}
+[<i class="bi bi-github"></i> GitHub](https://github.com/mlwp-tools){.btn-ghost}
+:::
+::::
+
+:::: {}
+::: terminal
+::: terminal-bar
+forecast_vs_synop.py
+:::
+
+```python
+import mlwp_data_loaders as dl
+import mxalign as mx
+
+# load: each loader tags its dataset with traits
+ds_obs = dl.load_and_validate_dataset(
+    "obs.sqlite",
+    loader="mlwp_data_loaders.loaders.harp.obstable",
+)
+ds_fc = dl.load_and_validate_dataset(
+    "fc.nc",
+    loader="mlwp_data_loaders.loaders.anemoi.anemoi_inference",
+)
+
+# align: grid -> stations, then common valid times
+ds_fc = mx.align_space(ds_fc, reference=ds_obs)
+aligned = mx.align_time({"obs": ds_obs, "fc": ds_fc})
+
+# compare: it's all xarray from here
+da_err = aligned["fc"]["2t"] - aligned["obs"]["2t"]
+```
+:::
+::::
+
+:::
+::::
+:::::
+
+::::: {.band .band-tint}
+:::: band-inner
+::: eyebrow
+The problem
+:::
+
+## Every source speaks its own format
+
+::: lead-text
+Verifying a forecast means putting it next to something else: observations, an analysis, another model. Each of those arrives in its own format, with its own dimension names, coordinates, units and conventions.
+:::
+
+::: {.card-grid .card-grid-5}
+
+::: mt-card
+::: card-icon
+<i class="bi bi-cloud-sun"></i>
+:::
+### Forecasts
+GRIB, netCDF, Zarr, FA, ML model output from anemoi-inference and friends.
+:::
+
+::: mt-card
+::: card-icon
+<i class="bi bi-geo-alt"></i>
+:::
+### Observations
+BUFR, HARP SQLite obstables, `vobs` files, station networks.
+:::
+
+::: mt-card
+::: card-icon
+<i class="bi bi-box-seam"></i>
+:::
+### Reanalysis
+Zarr and netCDF archives such as ERA5 and regional reanalyses.
+:::
+
+::: mt-card
+::: card-icon
+<i class="bi bi-globe2"></i>
+:::
+### Satellite
+BUFR, SEVIRI native and HRIT, HDF-EOS, …
+:::
+
+::: mt-card
+::: card-icon
+<i class="bi bi-broadcast"></i>
+:::
+### Radar
+ODIM HDF5 composites and national radar products.
+:::
+
+:::
+
+::: pull-quote
+Before you can compare anything, you have to **align** it. That step gets rewritten, ad hoc, in every verification study. mlwp-tools is about writing it once.
+:::
+::::
+:::::
+
+::::: {.band}
+:::: band-inner
+::: {.split}
+
+:::: {}
+::: eyebrow
+The idea
+:::
+
+## Bring your own loader
+
+::: lead-text
+One approach is a single general reader that understands every format. mlwp-tools makes the opposite bet: agree on a **minimal contract** for how a dataset should look, and let whoever knows the data best write the loader. That is usually around fifteen lines of `xarray`.
+:::
+
+Once a dataset follows the contract, a machine can answer the questions that a plain `xr.open_dataset` leaves open. Is this a forecast or an observation? A grid or scattered points? Deterministic, an ensemble, or quantiles? Every dataset declares three **traits**, and everything else follows from them.
+::::
+
+:::: {}
+::: traits-table
+
+| Trait | Attribute | Values |
+|---|---|---|
+| **Space** | `mlwp_space_trait` | `grid` · `point` |
+| **Time** | `mlwp_time_trait` | `forecast` · `observation` · `climatology` |
+| **Uncertainty** | `mlwp_uncertainty_trait` | `deterministic` · `ensemble` · `quantile` |
+
+:::
+
+Each trait implies the dimensions, coordinates and metadata (`standard_name`, `units`) a dataset must have. That is all a loader has to satisfy, nothing more.
+::::
+
+:::
+::::
+:::::
+
+::::: {.band .band-tint}
+:::: band-inner
+::: eyebrow
+How it fits together
+:::
+
+## Contract → load → align
+
+::: lead-text
+Three packages, each with one job. They share one data model: **everything is an `xr.Dataset`**. The specs validate it, loaders tag it, mxalign aligns it. There is no new data structure to learn.
+:::
+
+::: {.card-grid .card-grid-3}
+
+::: mt-card
+::: layer-num
+01 · Contract
+:::
+### mlwp-data-specs
+Defines the three traits and validates any `xr.Dataset` or Zarr store against them, from Python, the command line or CI. The spec text and the checks live side by side.
+:::
+
+::: mt-card
+::: layer-num
+02 · Load
+:::
+### mlwp-data-loaders
+Turns raw files into datasets that pass the specs. Built-in loaders for anemoi-inference, anemoi-datasets, HARP obstables and IFS forecasts, or point it at your own function.
+:::
+
+::: mt-card
+::: layer-num
+03 · Align
+:::
+### mxalign
+Reads the traits and picks the right alignment: grid to points, forecasts to observations, onto common valid times. Lazy with Dask, from a notebook up to a Slurm cluster.
+:::
+
+:::
+
+::: flow-wrap
+```{mermaid}
+%%| fig-responsive: true
+flowchart LR
+  S1[(Anemoi<br/>inference)] --> L1[built-in loader]
+  S2[(HARP<br/>obstable)] --> L2[built-in loader]
+  S3[(your own<br/>format)] --> L3[your loader]
+  L1 --> U[[xr.Dataset]]
+  L2 --> U
+  L3 --> U
+  U --> V{{validate traits<br/>mlwp-data-specs}}
+  V --> X[[spec-conforming<br/>xr.Dataset]]
+  X --> A[align in space & time<br/>mxalign]
+  A --> M[metrics, scorecards,<br/>HARP verification]
+```
+:::
+::::
+:::::
+
+::::: {.band}
+:::: band-inner
+::: eyebrow
+Packages
+:::
+
+## The toolbox
+
+::: lead-text
+All packages are open source and developed on GitHub under the [mlwp-tools](https://github.com/mlwp-tools) organisation. Releases are tag-driven and published to PyPI; see the [roadmap](roadmap.md) for what is coming next.
+:::
+
+::: {.card-grid .card-grid-3}
+
+::: mt-card
+[v0.1.0 on PyPI]{.badge-status .badge-released}
+
+### [mlwp-data-specs]{.pkg-name}
+Trait specifications and a validator for MLWP datasets, with a CLI and a Python API.
+
+::: card-links
+[GitHub](https://github.com/mlwp-tools/mlwp-data-specs) [Spec docs](https://mlwp-tools.github.io/mlwp-data-specs/) [PyPI](https://pypi.org/project/mlwp-data-specs/)
+:::
+:::
+
+::: mt-card
+[First release soon]{.badge-status}
+
+### [mlwp-data-loaders]{.pkg-name}
+Loaders that create spec-conforming `xr.Dataset`s from anemoi, HARP and IFS data, or from your own code.
+
+::: card-links
+[GitHub](https://github.com/mlwp-tools/mlwp-data-loaders)
+:::
+:::
+
+::: mt-card
+[v0.1.0 on PyPI · v0.2 soon]{.badge-status .badge-released}
+
+### [mxalign]{.pkg-name}
+Space and time alignment of meteorological datasets, plus a config-driven pipeline on Dask.
+
+::: card-links
+[GitHub](https://github.com/mlwp-tools/mxalign) [PyPI](https://pypi.org/project/mxalign/)
+:::
+:::
+
+::: mt-card
+[In development]{.badge-status}
+
+### [mlwp-harp-writer]{.pkg-name}
+Writes aligned datasets to HARP parquet, so harp's point verification tools can read them directly.
+
+::: card-links
+[GitHub](https://github.com/mlwp-tools/mlwp-harp-writer)
+:::
+:::
+
+::: mt-card
+[In development]{.badge-status}
+
+### [mlwp-scorecard]{.pkg-name}
+Scorecards that show at a glance where a forecast system beats a baseline, and where it is worse.
+
+::: card-links
+[GitHub](https://github.com/mlwp-tools/mlwp-scorecard)
+:::
+:::
+
+:::
+::::
+:::::
+
+::::: {.band .band-tint}
+:::: band-inner
+::: {.split .split-center}
+
+:::: {}
+::: eyebrow
+Not a verification engine
+:::
+
+## We hand you arrays that are safe to compare
+
+::: lead-text
+Plenty of packages already compute metrics well. Once your datasets share the same space, time and units, a score is a one-liner: bring `xskillscore`, `scores` or your own function.
+:::
+
+When one notebook is not enough, mxalign runs the same steps from a YAML config (load, transform, align, score) over Dask, on your laptop or on a Slurm cluster. The metric is configuration, not code we own.
+
+::: hero-actions
+[Walk through an example <i class="bi bi-arrow-right"></i>](get-started.qmd){.btn-ghost}
+:::
+::::
+
+:::: {}
+::: terminal
+::: terminal-bar
+config.yaml
+:::
+
+```yaml
+datasets:
+  ai-lam:
+    loader: mlwp_data_loaders.loaders.anemoi.anemoi_inference
+    files: ai-lam/{reference_time:strftime(%Y%m%d%H)}.nc
+  synop:
+    loader: mlwp_data_loaders.loaders.harp.obstable
+    files: OBSTABLE.sqlite
+alignment:
+  reference: synop
+  space:
+    interpolation:
+      method: delaunay
+verification:
+  reference: synop
+  metrics:
+    rmse:
+      function: xskillscore.rmse  # any callable
+      dim: ["reference_time", "point_index"]
+```
+:::
+::::
+
+:::
+::::
+:::::
+
+::::: {.band}
+:::: band-inner
+::: {.split .split-wide-left}
+
+:::: {}
+::: eyebrow
+Community
+:::
+
+## Get involved
+
+::: lead-text
+mlwp-tools started as a collaboration between people at European weather services working on machine-learning weather prediction, and it is open to anyone who needs to compare weather datasets. New loaders, bug reports and ideas for the specs are all welcome.
+:::
+
+- **Code and issues**: [github.com/mlwp-tools](https://github.com/mlwp-tools). Open an issue or a pull request on any of the packages.
+- **Where things are heading**: the [roadmap](roadmap.md) lists the planned releases and the open decisions.
+- **Talk to us**: we meet ad hoc; get in touch through a GitHub issue to join.
+::::
+
+:::: {}
+::: mt-card
+### Contributors
+
+The people behind the packages so far:
+
+::: people
+[Michiel Van Ginderachter]{} [Leif Denby]{} [Dieter Van den Bleeken]{} [Bastien Francois]{} [Sophie Buurman]{} [Hauke Schulz]{}
+:::
+
+::: card-links
+[All contributors on GitHub <i class="bi bi-arrow-right"></i>](https://github.com/orgs/mlwp-tools/people)
+:::
+:::
+::::
+
+:::
+::::
+:::::

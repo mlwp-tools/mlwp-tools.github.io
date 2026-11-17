@@ -1,0 +1,43 @@
+/*-- scss:defaults --*/
+
+// Dark variant of the logo palette: deep navy background, lighter blues.
+$mt-bg: #0b1a2c;
+$mt-surface: #10243b;
+$mt-text: #dbe6f2;
+$mt-blue: #6fb1f0;
+$mt-muted: #9fb0c2;
+$mt-border: #23405f;
+
+$body-bg: $mt-bg;
+$body-color: $mt-text;
+$primary: $mt-blue;
+$link-color: $mt-blue;
+$headings-color: #f1f6fb;
+$navbar-bg: rgba(11, 26, 44, 0.85);
+$navbar-fg: $mt-text;
+$navbar-hl: $mt-blue;
+$footer-bg: $mt-surface;
+$footer-fg: $mt-muted;
+$code-color: #9fd0ff;
+$code-bg: $mt-surface;
+$table-border-color: $mt-border;
+
+/*-- scss:rules --*/
+
+:root {
+  --mt-bg: #{$mt-bg};
+  --mt-surface: #{$mt-surface};
+  --mt-tint: #0e2135;
+  --mt-text: #{$mt-text};
+  --mt-heading: #f1f6fb;
+  --mt-muted: #{$mt-muted};
+  --mt-blue: #{$mt-blue};
+  --mt-blue-strong: #8cc3f5;
+  --mt-border: #{$mt-border};
+  --mt-cta: #f2a541;
+  --mt-cta-text: #0e2a47;
+  --mt-code-bg: #071322;
+  --mt-code-text: #d7e4f2;
+  --mt-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+  --mt-dot: rgba(111, 177, 240, 0.12);
+}

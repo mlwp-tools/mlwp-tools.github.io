@@ -1,0 +1,577 @@
+/*-- scss:defaults --*/
+
+// Shared by the light and dark themes. Colours come from the CSS custom
+// properties (--mt-*) defined in theme-light.scss and theme-dark.scss.
+$font-family-sans-serif: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+$font-family-monospace: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+$headings-font-weight: 700;
+$border-radius: 0.5rem;
+$border-radius-lg: 0.75rem;
+
+/*-- scss:rules --*/
+
+body {
+  font-feature-settings: "ss01";
+}
+
+::selection {
+  background: var(--mt-blue);
+  color: #ffffff;
+}
+
+h1, h2, h3, h4 {
+  letter-spacing: -0.015em;
+}
+
+// ---------- Navbar ----------
+
+.navbar {
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--mt-border);
+  box-shadow: none;
+}
+
+.navbar-brand img,
+.navbar-logo {
+  max-height: 34px;
+}
+
+.navbar .navbar-title {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.navbar .nav-link {
+  font-size: 0.9rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+// ---------- Landing page layout ----------
+
+// Full-width bands that alternate white and tinted backgrounds.
+.band {
+  padding: 5.5rem 0;
+  position: relative;
+
+  @media (max-width: 575px) {
+    padding: 3.5rem 0;
+  }
+}
+
+.band-tint {
+  background: var(--mt-tint);
+  border-top: 1px solid var(--mt-border);
+  border-bottom: 1px solid var(--mt-border);
+}
+
+.band-inner {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 1rem;
+
+  @media (min-width: 768px) {
+    padding: 0 3rem;
+  }
+}
+
+.band h2 {
+  font-size: clamp(1.8rem, 3.2vw, 2.6rem);
+  line-height: 1.15;
+  margin: 0.4rem 0 1.25rem;
+  border-bottom: none;
+  color: var(--mt-heading);
+}
+
+.lead-text {
+  font-size: 1.15rem;
+  line-height: 1.65;
+  color: var(--mt-muted);
+  max-width: 46rem;
+}
+
+// Two-column layout (Quarto's Bootstrap build has no flex .row/.col grid).
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2.5rem;
+
+  @media (min-width: 992px) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 3.5rem;
+  }
+
+  > div {
+    min-width: 0;
+  }
+}
+
+.split-center {
+  align-items: center;
+}
+
+// Hero: give the code window a little more room than the text.
+.split-hero {
+  @media (min-width: 992px) {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  }
+}
+
+.split-wide-left {
+  @media (min-width: 992px) {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  }
+}
+
+// Bracketed mono labels above section headings, e.g. [ THE PROBLEM ].
+.eyebrow {
+  font-family: $font-family-monospace;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--mt-blue);
+
+  p {
+    margin: 0;
+  }
+
+  p::before {
+    content: "[ ";
+  }
+
+  p::after {
+    content: " ]";
+  }
+}
+
+.accent {
+  background: linear-gradient(100deg, var(--mt-blue), #46b4e8);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+// ---------- Hero ----------
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  padding: 5rem 0 5.5rem;
+
+  // Dot grid that fades out towards the bottom, plus two soft blue glows.
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(var(--mt-dot) 1.2px, transparent 1.2px);
+    background-size: 22px 22px;
+    mask-image: linear-gradient(to bottom, black 30%, transparent 95%);
+    -webkit-mask-image: linear-gradient(to bottom, black 30%, transparent 95%);
+    pointer-events: none;
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    width: 720px;
+    height: 720px;
+    right: -220px;
+    top: -260px;
+    background: radial-gradient(circle, rgba(47, 128, 209, 0.22), transparent 65%);
+    pointer-events: none;
+  }
+
+  .band-inner {
+    position: relative;
+    z-index: 1;
+  }
+
+  h1 {
+    font-size: clamp(2.4rem, 5.4vw, 4.1rem);
+    line-height: 1.06;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    margin: 1rem 0 1.4rem;
+    color: var(--mt-heading);
+  }
+
+  .hero-text {
+    border-left: 4px solid var(--mt-blue);
+    padding-left: 1.5rem;
+  }
+
+  // The logo PNG has a white background, so present it as a rounded tile.
+  .hero-logo img {
+    width: 88px;
+    height: auto;
+    padding: 6px;
+    background: #ffffff;
+    border: 1px solid var(--mt-border);
+    border-radius: 1.1rem;
+    box-shadow: var(--mt-shadow);
+  }
+
+  @media (max-width: 575px) {
+    padding: 3rem 0 3.5rem;
+
+    .hero-text {
+      padding-left: 1rem;
+    }
+  }
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 2rem;
+
+  p {
+    display: contents;
+  }
+}
+
+// ---------- Buttons ----------
+
+.btn-cta,
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 46px;
+  padding: 0.7rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 700;
+  font-size: 0.88rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+}
+
+.btn-cta {
+  background: var(--mt-cta);
+  color: var(--mt-cta-text) !important;
+  border: 1px solid var(--mt-cta);
+  box-shadow: 0 8px 22px rgba(242, 165, 65, 0.35);
+}
+
+.btn-ghost {
+  background: var(--mt-surface);
+  color: var(--mt-heading) !important;
+  border: 1px solid var(--mt-border);
+
+  &:hover {
+    border-color: var(--mt-blue);
+  }
+}
+
+// ---------- Terminal / code window ----------
+
+.terminal {
+  border-radius: 0.75rem;
+  overflow: hidden;
+  border: 1px solid var(--mt-border);
+  box-shadow: var(--mt-shadow);
+  background: var(--mt-surface);
+
+  .terminal-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.65rem 1rem;
+    background: var(--mt-code-bg);
+    color: var(--mt-code-text);
+    font-family: $font-family-monospace;
+    font-size: 0.75rem;
+
+    p {
+      margin: 0 0 0 0.6rem;
+      opacity: 0.8;
+    }
+
+    &::before {
+      content: "";
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      background: #ff6b5f;
+      box-shadow: 18px 0 0 #f2c14e, 36px 0 0 #56c271;
+      margin-right: 42px;
+    }
+  }
+
+  div.sourceCode {
+    margin: 0;
+    border: none;
+    border-radius: 0;
+  }
+
+  pre.sourceCode,
+  div.sourceCode {
+    background: var(--mt-surface) !important;
+  }
+
+  pre {
+    padding: 1.1rem 1.2rem;
+    margin: 0;
+    font-size: 0.8rem;
+    line-height: 1.6;
+  }
+}
+
+// ---------- Cards ----------
+
+.card-grid {
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
+  margin-top: 2rem;
+}
+
+.card-grid-5 {
+  @media (min-width: 1100px) {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+.card-grid-3 {
+  @media (min-width: 900px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.mt-card {
+  position: relative;
+  background: var(--mt-surface);
+  border: 1px solid var(--mt-border);
+  border-radius: 0.75rem;
+  padding: 1.5rem 1.4rem 1.3rem;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+
+  &:hover {
+    transform: translateY(-6px);
+    border-color: var(--mt-blue);
+    box-shadow: var(--mt-shadow);
+  }
+
+  h3 {
+    font-size: 1.15rem;
+    margin: 0.6rem 0 0.5rem;
+    color: var(--mt-heading);
+  }
+
+  p {
+    color: var(--mt-muted);
+    font-size: 0.95rem;
+    line-height: 1.55;
+    margin-bottom: 0.5rem;
+  }
+
+  p:last-child {
+    margin-bottom: 0;
+  }
+
+  code {
+    font-size: 0.82rem;
+  }
+}
+
+.card-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 0.6rem;
+  background: var(--mt-tint);
+  border: 1px solid var(--mt-border);
+  color: var(--mt-blue);
+  font-size: 1.3rem;
+
+  p {
+    margin: 0;
+  }
+}
+
+// Numbered layer cards (contract → load → align).
+.layer-num {
+  font-family: $font-family-monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mt-blue);
+
+  p {
+    margin: 0;
+  }
+}
+
+.pkg-name {
+  font-family: $font-family-monospace;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--mt-heading);
+}
+
+.mt-card .card-links {
+  margin-top: 0.9rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+
+  a {
+    margin-right: 0.9rem;
+    text-decoration: none;
+  }
+}
+
+// Status badges on package cards.
+.badge-status {
+  display: inline-block;
+  font-family: $font-family-monospace;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid var(--mt-border);
+  color: var(--mt-muted);
+  background: var(--mt-tint);
+}
+
+.badge-released {
+  color: #1d7a46;
+  border-color: rgba(29, 122, 70, 0.35);
+  background: rgba(29, 122, 70, 0.08);
+}
+
+// ---------- Quote / callout ----------
+
+.pull-quote {
+  margin: 2.5rem 0 0;
+  padding: 1.4rem 1.6rem;
+  border-left: 4px solid var(--mt-cta);
+  background: var(--mt-surface);
+  border-radius: 0 0.75rem 0.75rem 0;
+  border-top: 1px solid var(--mt-border);
+  border-right: 1px solid var(--mt-border);
+  border-bottom: 1px solid var(--mt-border);
+  font-size: 1.15rem;
+  line-height: 1.55;
+  color: var(--mt-heading);
+
+  p {
+    margin: 0;
+  }
+}
+
+// ---------- Traits table ----------
+
+.traits-table {
+  margin-top: 2rem;
+
+  table {
+    background: var(--mt-surface);
+    border-radius: 0.75rem;
+    overflow: hidden;
+    border: 1px solid var(--mt-border);
+  }
+
+  th {
+    font-family: $font-family-monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--mt-muted);
+  }
+
+  td, th {
+    padding: 0.85rem 0.9rem !important;
+    vertical-align: top;
+  }
+
+  td code {
+    font-size: 0.8rem;
+    white-space: nowrap;
+  }
+}
+
+// ---------- Flowchart ----------
+
+.flow-wrap {
+  margin-top: 2.5rem;
+  padding: 1.5rem;
+  background: var(--mt-surface);
+  border: 1px solid var(--mt-border);
+  border-radius: 0.75rem;
+  overflow-x: auto;
+}
+
+// ---------- Community ----------
+
+.people {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+
+  p {
+    display: contents;
+  }
+
+  span {
+    padding: 0.35rem 0.8rem;
+    border-radius: 999px;
+    border: 1px solid var(--mt-border);
+    background: var(--mt-surface);
+    font-size: 0.88rem;
+  }
+}
+
+// ---------- Get started page ----------
+
+.step-label {
+  font-family: $font-family-monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mt-blue);
+  margin-bottom: -0.6rem;
+}
+
+// Wide tables (roadmap, get started) scroll sideways on phones instead of
+// pushing the page wider than the screen.
+@media (max-width: 767px) {
+  main.content table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+  }
+}
+
+// Custom-layout pages should not leave a gap above the footer.
+.page-layout-custom .nav-footer {
+  margin-top: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mt-card,
+  .btn-cta,
+  .btn-ghost {
+    transition: none;
+  }
+
+  .mt-card:hover,
+  .btn-cta:hover,
+  .btn-ghost:hover {
+    transform: none;
+  }
+}
