@@ -1,0 +1,261 @@
+---
+title: "Get started"
+subtitle: "From two files in different formats to a score you can plot, in six steps."
+description: "Install mlwp-tools, validate a dataset, load data with a built-in or your own loader, align a forecast with observations, and scale up with a config-driven pipeline."
+---
+
+This walkthrough compares a gridded forecast with station observations: the most common verification task, and a good tour of the three core packages. Each step is a few lines of Python, and every intermediate result is a plain `xr.Dataset`.
+
+::: {.callout-note}
+## Pre-release
+mlwp-data-specs and mxalign v0.1.0 are on PyPI, and mlwp-data-loaders has its first release coming up. The examples on this page follow the current `main` branches, which become mlwp-data-loaders v0.1.0 and mxalign v0.2.0; see the [roadmap](roadmap.md). Until then, install from GitHub.
+:::
+
+## 1. Install {#install}
+
+```bash
+pip install mlwp-data-specs \
+    "mlwp-data-loaders @ git+https://github.com/mlwp-tools/mlwp-data-loaders" \
+    "mxalign @ git+https://github.com/mlwp-tools/mxalign"
+```
+
+The scoring example in step 6 also uses [scores](https://scores.readthedocs.io) (`pip install scores`), but any metrics package will do.
+
+or, in a uv project:
+
+```bash
+uv add mlwp-data-specs \
+    "mlwp-data-loaders @ git+https://github.com/mlwp-tools/mlwp-data-loaders" \
+    "mxalign @ git+https://github.com/mlwp-tools/mxalign"
+```
+
+## 2. Know what your dataset is {#traits}
+
+Open a forecast with xarray and you get an `xr.Dataset`, but nothing in it tells a program whether this is a forecast or an observation, a grid or a set of points, one member or an ensemble. mlwp-tools pins this down with three **traits**:
+
+| Trait | Attribute | Values | What it implies |
+|---|---|---|---|
+| Space | `mlwp_space_trait` | `grid`, `point` | which spatial dimensions and `latitude`/`longitude` coordinates exist |
+| Time | `mlwp_time_trait` | `forecast`, `observation`, `climatology` | `reference_time` + `lead_time`, or `valid_time` |
+| Uncertainty | `mlwp_uncertainty_trait` | `deterministic`, `ensemble`, `quantile` | no extra dimension, a `member` dimension, or a `quantile` dimension |
+
+The full requirements, including the `standard_name` and `units` each coordinate needs, are in the [spec docs](https://mlwp-tools.github.io/mlwp-data-specs/).
+
+## 3. Validate against the contract {#validate}
+
+mlwp-data-specs checks a dataset against the traits you name and reports every requirement as pass or fail, with the reason.
+
+```python
+import xarray as xr
+from mlwp_data_specs import validate_dataset
+
+ds = xr.open_zarr("forecast.zarr")
+report = validate_dataset(
+    ds, time="forecast", space="grid", uncertainty="deterministic"
+)
+report.console_print()
+
+if report.has_fails():
+    raise SystemExit("dataset does not follow the mlwp-data-specs")
+```
+
+```text
+                       Validation Report
+ Section           Requirement                       Status
+ ─────────────────────────────────────────────────────────
+ Time Coordinate   Allowed dimension variants          ✅
+ Time Coordinate   Required coordinates present        ✅
+ Time Coordinate   Metadata for 'reference_time'       ✅
+ Time Coordinate   Metadata for 'lead_time'            ✅
+ Spatial Coord.    longitude / latitude present        ✅
+ Uncertainty       deterministic — no extra dims       ✅
+```
+
+The same check runs from the command line, which is handy in CI or right after writing a dataset:
+
+```bash
+mlwp.validate_dataset_traits s3://bucket/forecast.zarr --time forecast --space grid --s3-anon
+```
+
+## 4. Load data with a loader {#load}
+
+In practice you rarely build these datasets by hand. A **loader** reads one source format, sets the traits, and `load_and_validate_dataset` validates the result straight away.
+
+```python
+import mlwp_data_loaders as dl
+
+ds_obs = dl.load_and_validate_dataset(
+    "OBSTABLE_2024.sqlite",
+    loader="mlwp_data_loaders.loaders.harp.obstable",
+)
+ds_fc = dl.load_and_validate_dataset(
+    ["fc_2024010100.nc", "fc_2024010200.nc"],
+    loader="mlwp_data_loaders.loaders.anemoi.anemoi_inference",
+)
+```
+
+Built-in loaders cover anemoi-inference output, anemoi-datasets, HARP obstables and IFS forecasts. Loaders are lazy (Dask), so nothing is read until you compute.
+
+### Bring your own loader {#byol}
+
+For any other format, write a function that returns an `xr.Dataset` with the right dimensions, coordinates and trait attributes. You know your data best, so this is usually short:
+
+```python
+import xarray as xr
+
+
+def load_dataset(paths: list[str], variables: list[str] | None = None) -> xr.Dataset:
+    """Load my station netCDF files as an mlwp-tools observation dataset."""
+    ds = xr.open_mfdataset(paths, engine="h5netcdf")
+    ds = ds.rename({"station": "point_index", "time": "valid_time"})
+    if variables is not None:
+        ds = ds[variables]
+    ds.attrs["mlwp_space_trait"] = "point"
+    ds.attrs["mlwp_time_trait"] = "observation"
+    ds.attrs["mlwp_uncertainty_trait"] = "deterministic"
+    return ds
+
+
+ds_obs = dl.load_and_validate_dataset(paths, loader=load_dataset)
+```
+
+`loader` accepts a module path, a path to a `.py` file, or the function itself. If the dataset doesn't satisfy the contract, the validation report tells you exactly what is missing.
+
+## 5. Align in space and time {#align}
+
+You never tell mxalign *how* to align. Because each dataset declares what it is, mxalign picks the strategy:
+
+- a **grid** with **points**: interpolate the grid to the point locations,
+- a **forecast** with **observations**: match valid times (`reference_time` + `lead_time`) to observation times.
+
+```python
+import mxalign as mx
+
+# space: interpolate the forecast grid to the station locations.
+# Only the forecast changes; ds_obs is just the reference.
+# Stations outside the forecast domain become NaN.
+ds_fc_aligned = mx.align_space(ds_fc, reference=ds_obs)
+
+# the same, with Delaunay triangulation and cached barycentric weights
+ds_fc_aligned = mx.align_space(ds_fc, reference=ds_obs, method="delaunay")
+
+# time: for every (reference_time, lead_time) of the forecast, take the
+# observation at that valid time. The observations get the forecast's
+# layout, with each observation repeated for every forecast valid at that
+# time, and NaN where there is no observation. The forecast values don't
+# change; the forecast only gains a valid_time coordinate.
+aligned = mx.align_time({"obs": ds_obs, "fc": ds_fc_aligned})
+ds_obs_aligned = aligned["obs"]
+```
+
+`align_time` takes a dict (or a list) of datasets and returns them in the same form. Only the observations need taking out here, since the forecast is unchanged.
+
+::: {.callout-warning}
+## The time-alignment API may change
+How `align_time` joins several forecasts (which reference times and lead times are kept) is being made explicit and configurable in [mxalign#62](https://github.com/mlwp-tools/mxalign/issues/62), alongside the alignment refactor in [mxalign#30](https://github.com/mlwp-tools/mxalign/pull/30). Expect this call to change in the next mxalign releases; this page will be updated when it does.
+:::
+
+Time alignment handles each combination of traits:
+
+| From → to | What happens |
+|---|---|
+| forecast → observation | stack to `valid_time`, match lead times, reindex |
+| observation → forecast | broadcast the observation to `(reference_time, lead_time)` |
+| observation → observation | reindex `valid_time` |
+| forecast → forecast | reindex `reference_time` and `lead_time` |
+
+Everything stays lazy and is still plain xarray, so `.sel`, `.mean`, plotting and `to_zarr` all work as usual.
+
+## 6. Compare {#compare}
+
+Same space, same time, same units: the aligned datasets are plain xarray, so any metrics package works on them directly. For example, with [scores](https://scores.readthedocs.io):
+
+```python
+import scores
+
+# RMSE for each lead time, over all forecasts and stations
+da_rmse = scores.continuous.rmse(
+    ds_fc_aligned["2t"], ds_obs_aligned["2t"], preserve_dims=["lead_time"]
+)
+da_rmse.plot(x="lead_time")
+```
+
+Your own scoring function works just as well, because it's only xarray:
+
+```python
+import xarray as xr
+
+
+def compute_mean_abs_error(da_fc: xr.DataArray, da_obs: xr.DataArray) -> xr.DataArray:
+    """Mean absolute error for each lead time."""
+    return abs(da_fc - da_obs).mean(["reference_time", "point_index"], skipna=True)
+```
+
+mlwp-tools is deliberately **not** a verification engine. Use `scores`, `xskillscore` or your own functions; mlwp-tools makes sure the arrays you hand them are comparable. To go further, [mlwp-scorecard](https://github.com/mlwp-tools/mlwp-scorecard) turns per-case scores into a scorecard against a baseline, and [mlwp-harp-writer](https://github.com/mlwp-tools/mlwp-harp-writer) writes aligned data for HARP's point verification.
+
+## Scale up: a config-driven pipeline {#pipeline}
+
+For many dates, models and variables, describe the same steps in YAML and let mxalign run them on Dask:
+
+```yaml
+dates:
+  start: 2020-02-01T00:00:00
+  end: 2020-03-01T00:00:00
+  period: 24h       # a new forecast every 24 hours
+  range: 144h       # out to six days
+  step: 6h
+
+datasets:
+  ai-lam:
+    loader: mlwp_data_loaders.loaders.anemoi.anemoi_inference
+    files: ./ai-lam/{reference_time:strftime(%Y%m%d%H)}.nc
+    variables: ["2t", "msl"]
+  nwp-lam:
+    loader: ./my_loaders/fa_loader.py       # your own loader file
+    files: ./nwp-lam/{reference_time:strftime(%Y%m%d%H)}.fa
+  synop:
+    loader: mlwp_data_loaders.loaders.harp.obstable
+    files: ./observations/OBSTABLE.sqlite
+
+alignment:
+  reference: synop
+  time:
+    return_as: forecast
+  space:
+    interpolation:
+      method: delaunay
+
+verification:
+  reference: synop
+  metrics:
+    rmse:
+      function: xskillscore.rmse  # any callable
+      inputs:
+        a: forecast
+        b: reference
+      dim: ["reference_time", "point_index"]
+      skipna: true
+```
+
+Run it locally or on a Slurm cluster:
+
+```bash
+mxalign local config.yaml --n_workers 4 --threads_per_worker 1
+mxalign slurm config.yaml --account ACCOUNT --queue QUEUE --cores 8 --memory 64GB
+```
+
+or from Python:
+
+```python
+from mxalign.runner import Runner
+
+runner = Runner("config.yaml")
+runner.run()
+metrics = runner.metrics
+```
+
+## Next steps {#next}
+
+- Browse the [trait specifications](https://mlwp-tools.github.io/mlwp-data-specs/).
+- Work through the mxalign notebooks: [introduction](https://github.com/mlwp-tools/mxalign/blob/main/examples/introduction.ipynb) and [advanced](https://github.com/mlwp-tools/mxalign/blob/main/examples/advanced.ipynb).
+- See what is planned in the [roadmap](roadmap.md), and [open an issue](https://github.com/mlwp-tools) if your data format or use case isn't covered yet.

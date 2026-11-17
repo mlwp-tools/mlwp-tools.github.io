@@ -4,23 +4,42 @@ project:
 
 website:
   title: "mlwp-tools"
+  description: "Python tools that turn forecasts, observations and reanalyses into comparable xarray datasets for machine-learning weather prediction (MLWP) verification."
   site-url: https://mlwp-tools.github.io
   repo-url: https://github.com/mlwp-tools/mlwp-tools.github.io
   repo-actions: [edit, issue]
+  favicon: img/logo.png
+  open-graph: true
   navbar:
+    logo: img/logo.png
+    logo-alt: "mlwp-tools logo"
     left:
-      - href: index.md
+      - href: index.qmd
         text: Home
+      - href: get-started.qmd
+        text: Get started
       - href: roadmap.md
         text: Roadmap
     right:
       - icon: github
         href: https://github.com/mlwp-tools
         aria-label: mlwp-tools on GitHub
+  page-footer:
+    left: "mlwp-tools · open-source tooling for machine-learning weather prediction"
+    right:
+      - text: GitHub
+        href: https://github.com/mlwp-tools
+      - text: Roadmap
+        href: roadmap.md
 
 format:
   html:
     theme:
-      light: cosmo
-      dark: darkly
+      light: [cosmo, theme-light.scss, theme.scss]
+      dark: [cosmo, theme-dark.scss, theme.scss]
+    respect-user-color-scheme: true
     toc: true
+    highlight-style: github
+    include-in-header: fonts.html
+    mermaid:
+      theme: neutral
