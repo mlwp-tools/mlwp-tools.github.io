@@ -1,6 +1,6 @@
 ---
 title: "Get started"
-subtitle: "From two files in different formats to an error you can plot, in six steps."
+subtitle: "From two files in different formats to a score you can plot, in six steps."
 description: "Install mlwp-tools, validate a dataset, load data with a built-in or your own loader, align a forecast with observations, and scale up with a config-driven pipeline."
 ---
 
