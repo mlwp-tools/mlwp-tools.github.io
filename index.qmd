@@ -373,16 +373,17 @@ mlwp-tools started as a collaboration between people at European weather service
 
 :::: {}
 ::: mt-card
-### Contributors
-
-The people behind the packages so far:
-
-::: people
-[Michiel Van Ginderachter]{} [Leif Denby]{} [Dieter Van den Bleeken]{} [Bastien Francois]{} [Sophie Buurman]{} [Hauke Schulz]{}
+::: card-icon
+<i class="bi bi-people"></i>
 :::
+### Ways to contribute
+
+- **Add a loader** for a data source you work with.
+- **Report** a dataset that doesn't validate, or a spec that is unclear.
+- **Discuss** the trait specs and what they should cover next.
 
 ::: card-links
-[All contributors on GitHub <i class="bi bi-arrow-right"></i>](https://github.com/orgs/mlwp-tools/people)
+[Open an issue <i class="bi bi-arrow-right"></i>](https://github.com/mlwp-tools)
 :::
 :::
 ::::

@@ -516,22 +516,14 @@ h1, h2, h3, h4 {
 
 // ---------- Community ----------
 
-.people {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-top: 1rem;
+.mt-card ul {
+  color: var(--mt-muted);
+  font-size: 0.95rem;
+  padding-left: 1.1rem;
+  margin-bottom: 0;
 
-  p {
-    display: contents;
-  }
-
-  span {
-    padding: 0.35rem 0.8rem;
-    border-radius: 999px;
-    border: 1px solid var(--mt-border);
-    background: var(--mt-surface);
-    font-size: 0.88rem;
+  li {
+    margin-bottom: 0.4rem;
   }
 }
 

@@ -20,7 +20,7 @@ Source for the mlwp-tools website, https://mlwp-tools.github.io. The site is bui
   - `.split` (two columns on wide screens; `.split-center`, `.split-hero`, `.split-wide-left` variants),
   - `.card-grid` (`.card-grid-3`, `.card-grid-5`) with `.mt-card` children, `.card-icon`, `.layer-num`, `.card-links`, `.badge-status` / `.badge-released`,
   - `.terminal` with a `.terminal-bar` title, wrapping a code block,
-  - `.pull-quote`, `.traits-table`, `.flow-wrap` (around the mermaid diagram), `.people`,
+  - `.pull-quote`, `.traits-table`, `.flow-wrap` (around the mermaid diagram),
   - `.btn-cta` and `.btn-ghost` on links, e.g. `[Get started](get-started.qmd){.btn-cta}`.
 - Icons are [Bootstrap Icons](https://icons.getbootstrap.com/), which Quarto bundles: `<i class="bi bi-github"></i>`.
 - Quarto's Bootstrap build has no flex `.row`/`.col-*` grid, so use `.split` or `.card-grid` for columns.
