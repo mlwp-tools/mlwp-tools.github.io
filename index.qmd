@@ -54,13 +54,15 @@ ds_fc = dl.load_and_validate_dataset(
 )
 
 # align: grid -> stations, then common valid times
-ds_fc = mx.align_space(ds_fc, reference=ds_obs)
-aligned = mx.align_time({"obs": ds_obs, "fc": ds_fc})
+ds_fc_aligned = mx.align_space(ds_fc, reference=ds_obs)
+ds_obs_aligned, ds_fc_aligned = mx.align_time(
+    [ds_obs, ds_fc_aligned]
+)
 
 # score: any metrics package works, or your own function
 da_rmse = scores.continuous.rmse(
-    aligned["fc"]["2t"],
-    aligned["obs"]["2t"],
+    ds_fc_aligned["2t"],
+    ds_obs_aligned["2t"],
     preserve_dims=["lead_time"],
 )
 ```

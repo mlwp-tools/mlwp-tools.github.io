@@ -132,14 +132,16 @@ You never tell mxalign *how* to align. Because each dataset declares what it is,
 import mxalign as mx
 
 # grid -> stations; points outside the forecast domain become NaN
-ds_fc_pts = mx.align_space(ds_fc, reference=ds_obs)
+ds_fc_aligned = mx.align_space(ds_fc, reference=ds_obs)
 
 # or with Delaunay triangulation and cached barycentric weights
-ds_fc_pts = mx.align_space(ds_fc, reference=ds_obs, method="delaunay")
+ds_fc_aligned = mx.align_space(ds_fc, reference=ds_obs, method="delaunay")
 
 # put both on the same valid times, in forecast layout
-aligned = mx.align_time({"obs": ds_obs, "fc": ds_fc_pts})
+ds_obs_aligned, ds_fc_aligned = mx.align_time([ds_obs, ds_fc_aligned])
 ```
+
+`align_time` changes both datasets: the forecast keeps only the valid times that both datasets have, and the observations are laid out like the forecast, along `(reference_time, lead_time)`. The results come back in the order you passed them in (or as a dict if you pass a dict).
 
 Time alignment handles each combination of traits:
 
@@ -159,10 +161,10 @@ Same space, same time, same units: the aligned datasets are plain xarray, so any
 ```python
 import scores
 
-da_fc, da_obs = aligned["fc"]["2t"], aligned["obs"]["2t"]
-
 # RMSE for each lead time, over all forecasts and stations
-da_rmse = scores.continuous.rmse(da_fc, da_obs, preserve_dims=["lead_time"])
+da_rmse = scores.continuous.rmse(
+    ds_fc_aligned["2t"], ds_obs_aligned["2t"], preserve_dims=["lead_time"]
+)
 da_rmse.plot(x="lead_time")
 ```
 
