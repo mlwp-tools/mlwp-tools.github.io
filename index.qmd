@@ -41,6 +41,7 @@ forecast_vs_synop.py
 ```python
 import mlwp_data_loaders as dl
 import mxalign as mx
+import scores
 
 # load + validate: tag with traits, check against the specs
 ds_obs = dl.load_and_validate_dataset(
@@ -56,8 +57,12 @@ ds_fc = dl.load_and_validate_dataset(
 ds_fc = mx.align_space(ds_fc, reference=ds_obs)
 aligned = mx.align_time({"obs": ds_obs, "fc": ds_fc})
 
-# compare: it's all xarray from here
-da_err = aligned["fc"]["2t"] - aligned["obs"]["2t"]
+# score: any metrics package works, or your own function
+da_rmse = scores.continuous.rmse(
+    aligned["fc"]["2t"],
+    aligned["obs"]["2t"],
+    preserve_dims=["lead_time"],
+)
 ```
 :::
 ::::

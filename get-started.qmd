@@ -19,6 +19,8 @@ pip install mlwp-data-specs \
     "mxalign @ git+https://github.com/mlwp-tools/mxalign"
 ```
 
+The scoring example in step 6 also uses [scores](https://scores.readthedocs.io) (`pip install scores`), but any metrics package will do.
+
 or, in a uv project:
 
 ```bash
@@ -152,17 +154,30 @@ Everything stays lazy and is still plain xarray, so `.sel`, `.mean`, plotting an
 
 ## 6. Compare {#compare}
 
-Same space, same time, same units: the score is one line, with plain numpy or any metrics package.
+Same space, same time, same units: the aligned datasets are plain xarray, so any metrics package works on them directly. For example, with [scores](https://scores.readthedocs.io):
 
 ```python
-import numpy as np
+import scores
 
-da_err = aligned["fc"]["2t"] - aligned["obs"]["2t"]
-da_rmse = np.sqrt((da_err**2).mean(["reference_time", "point_index"], skipna=True))
+da_fc, da_obs = aligned["fc"]["2t"], aligned["obs"]["2t"]
+
+# RMSE for each lead time, over all forecasts and stations
+da_rmse = scores.continuous.rmse(da_fc, da_obs, preserve_dims=["lead_time"])
 da_rmse.plot(x="lead_time")
 ```
 
-mlwp-tools is deliberately **not** a verification engine. Use `xskillscore`, `scores` or your own functions; mlwp-tools makes sure the arrays you hand them are comparable. To go further, [mlwp-scorecard](https://github.com/mlwp-tools/mlwp-scorecard) turns per-case scores into a scorecard against a baseline, and [mlwp-harp-writer](https://github.com/mlwp-tools/mlwp-harp-writer) writes aligned data for HARP's point verification.
+Your own scoring function works just as well, because it's only xarray:
+
+```python
+import xarray as xr
+
+
+def compute_mean_abs_error(da_fc: xr.DataArray, da_obs: xr.DataArray) -> xr.DataArray:
+    """Mean absolute error for each lead time."""
+    return abs(da_fc - da_obs).mean(["reference_time", "point_index"], skipna=True)
+```
+
+mlwp-tools is deliberately **not** a verification engine. Use `scores`, `xskillscore` or your own functions; mlwp-tools makes sure the arrays you hand them are comparable. To go further, [mlwp-scorecard](https://github.com/mlwp-tools/mlwp-scorecard) turns per-case scores into a scorecard against a baseline, and [mlwp-harp-writer](https://github.com/mlwp-tools/mlwp-harp-writer) writes aligned data for HARP's point verification.
 
 ## Scale up: a config-driven pipeline {#pipeline}
 
