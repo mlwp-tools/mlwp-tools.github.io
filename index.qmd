@@ -42,7 +42,9 @@ forecast_vs_synop.py
 import mlwp_data_loaders as dl
 import mxalign as mx
 
-# load: each loader tags its dataset with traits
+# load: each loader reads its source and tags it with traits
+# validate: the result is checked against mlwp-data-specs,
+#   so a non-conforming dataset fails here, not mid-analysis
 ds_obs = dl.load_and_validate_dataset(
     "obs.sqlite",
     loader="mlwp_data_loaders.loaders.harp.obstable",
