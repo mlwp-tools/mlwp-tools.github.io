@@ -56,8 +56,8 @@ ds_fc = dl.load_and_validate_dataset(
 # space: forecast grid -> station points (obs unchanged)
 ds_fc_aligned = mx.align_space(ds_fc, reference=ds_obs)
 
-# time: cut both to their shared valid times, and lay the
-#   obs out like the forecast: (reference_time, lead_time)
+# time: repeat the obs onto the forecast's (reference_time,
+#   lead_time) grid by valid time; forecast is unchanged
 ds_obs_aligned, ds_fc_aligned = mx.align_time(
     [ds_obs, ds_fc_aligned]
 )
@@ -209,7 +209,7 @@ Turns raw files into datasets that pass the specs. Built-in loaders for anemoi-i
 03 · Align
 :::
 ### mxalign
-Reads the traits and picks the right alignment: grid to points, forecasts to observations, onto common valid times. Lazy with Dask, from a notebook up to a Slurm cluster.
+Reads the traits and picks the right alignment: a forecast grid to station points, observations onto the forecast's valid times. Lazy with Dask, from a notebook up to a Slurm cluster.
 :::
 
 :::

@@ -139,9 +139,11 @@ ds_fc_aligned = mx.align_space(ds_fc, reference=ds_obs)
 # the same, with Delaunay triangulation and cached barycentric weights
 ds_fc_aligned = mx.align_space(ds_fc, reference=ds_obs, method="delaunay")
 
-# time: both datasets change. Each is cut to the valid times they share,
-# and the observations are laid out like the forecast, along
-# (reference_time, lead_time), so the two line up element by element.
+# time: for every (reference_time, lead_time) of the forecast, take the
+# observation at that valid time. The observations get the forecast's
+# layout, with each observation repeated for every forecast valid at that
+# time, and NaN where there is no observation. The forecast values don't
+# change; the forecast only gains a valid_time coordinate.
 ds_obs_aligned, ds_fc_aligned = mx.align_time([ds_obs, ds_fc_aligned])
 ```
 
