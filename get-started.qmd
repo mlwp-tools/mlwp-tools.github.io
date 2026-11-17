@@ -144,10 +144,16 @@ ds_fc_aligned = mx.align_space(ds_fc, reference=ds_obs, method="delaunay")
 # layout, with each observation repeated for every forecast valid at that
 # time, and NaN where there is no observation. The forecast values don't
 # change; the forecast only gains a valid_time coordinate.
-ds_obs_aligned, ds_fc_aligned = mx.align_time([ds_obs, ds_fc_aligned])
+aligned = mx.align_time({"obs": ds_obs, "fc": ds_fc_aligned})
+ds_obs_aligned = aligned["obs"]
 ```
 
-`align_time` returns the datasets in the order you passed them in (or a dict, if you pass a dict).
+`align_time` takes a dict (or a list) of datasets and returns them in the same form. Only the observations need taking out here, since the forecast is unchanged.
+
+::: {.callout-warning}
+## The time-alignment API may change
+How `align_time` joins several forecasts (which reference times and lead times are kept) is being made explicit and configurable in [mxalign#62](https://github.com/mlwp-tools/mxalign/issues/62), alongside the alignment refactor in [mxalign#30](https://github.com/mlwp-tools/mxalign/pull/30). Expect this call to change in the next mxalign releases; this page will be updated when it does.
+:::
 
 Time alignment handles each combination of traits:
 

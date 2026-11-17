@@ -58,9 +58,9 @@ ds_fc_aligned = mx.align_space(ds_fc, reference=ds_obs)
 
 # time: repeat the obs onto the forecast's (reference_time,
 #   lead_time) grid by valid time; forecast is unchanged
-ds_obs_aligned, ds_fc_aligned = mx.align_time(
-    [ds_obs, ds_fc_aligned]
-)
+#   (this API may still change, see mxalign#62)
+aligned = mx.align_time({"obs": ds_obs, "fc": ds_fc_aligned})
+ds_obs_aligned = aligned["obs"]
 
 # score: RMSE per lead time, with scores or your own function
 da_rmse = scores.continuous.rmse(
